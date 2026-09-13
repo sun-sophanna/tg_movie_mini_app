@@ -1,0 +1,22 @@
+{
+  "home": {
+    "title": "Movies",
+    "search": "Search",
+    "continue": "Continue watching",
+    "trending": "Trending",
+    "featured": "Featured",
+    "categories": "Categories",
+    "viewAll": "View all"
+  },
+  "search": {
+    "placeholder": "Search movies…",
+    "empty": "No results"
+  },
+  "movie": {
+    "watch": "Watch now",
+    "favorite": "Favorite",
+    "episodes": "Episodes",
+    "episode": "Episode",
+    "notFound": "Movie not found"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "home": {
+    "title": "ភាពយន្ត",
+    "search": "ស្វែងរក",
+    "continue": "បន្តមើល",
+    "trending": "កំពុងល្បី",
+    "featured": "ពិសេស",
+    "categories": "ប្រភេទ",
+    "viewAll": "មើលទាំងអស់"
+  },
+  "search": {
+    "placeholder": "ស្វែងរកភាពយន្ត…",
+    "empty": "គ្មានលទ្ធផល"
+  },
+  "movie": {
+    "watch": "មើលឥឡូវ",
+    "favorite": "ចំណូលចិត្ត",
+    "episodes": "ភាគ",
+    "episode": "ភាគ",
+    "notFound": "រកមិនឃើញភាពយន្ត"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "name": "telegram-movie-app",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "pnpm run build:api && pnpm run build:web",
+    "build:packages": "pnpm --filter @movie/shared build",
+    "build:api": "pnpm run build:packages && nest build api",
+    "build:web": "pnpm --filter @movie/web build",
+    "start:api": "nest start api",
+    "start:api:dev": "pnpm run build:packages && nest start api --watch",
+    "start:web": "pnpm --filter @movie/web dev",
+    "lint": "eslint \"apps/**/*.ts\" \"packages/**/*.ts\"",
+    "test": "jest",
+    "test:api": "jest --selectProjects api",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
+    "migration:run": "ts-node --project tsconfig.json apps/api/src/database/run-migrations.ts",
+    "seed:dev": "ts-node --project tsconfig.json apps/api/src/database/seeds/seed-dev.ts",
+    "docker:db:up": "docker compose -f docker-compose.dev.yml up -d",
+    "docker:db:down": "docker compose -f docker-compose.dev.yml down"
+  },
+  "dependencies": {
+    "@movie/shared": "workspace:*",
+    "@movie/types": "workspace:*",
+    "@nestjs/axios": "^4.0.1",
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.4.6",
+    "@nestjs/throttler": "^6.4.0",
+    "@nestjs/typeorm": "^11.0.3",
+    "axios": "^1.20.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "dotenv": "^16.4.7",
+    "helmet": "^8.0.0",
+    "pg": "^8.22.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "typeorm": "^0.3.22",
+    "uuid": "^11.0.5"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.1",
+    "@types/express": "^5.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.10.7",
+    "@types/pg": "^8.20.0",
+    "@types/supertest": "^6.0.2",
+    "eslint": "^9.18.0",
+    "jest": "^30.0.0",
+    "prettier": "^3.4.2",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.7.3"
+  },
+  "jest": {
+    "projects": [
+      {
+        "displayName": "api",
+        "preset": "ts-jest",
+        "testEnvironment": "node",
+        "rootDir": "apps/api",
+        "testRegex": ".*\\.spec\\.ts$",
+        "moduleNameMapper": {
+          "^@movie/types$": "<rootDir>/../../packages/types/src",
+          "^@movie/shared$": "<rootDir>/../../packages/shared/src"
+        }
+      }
+    ]
+  }
+}

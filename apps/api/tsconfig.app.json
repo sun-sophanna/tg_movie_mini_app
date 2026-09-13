@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/apps/api",
+    "paths": {
+      "@movie/types": ["../../packages/types/src"],
+      "@movie/shared": ["../../packages/shared/src"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*spec.ts", "src/database/run-migrations.ts", "src/database/seeds/**"]
+}
