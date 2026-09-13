@@ -70,7 +70,7 @@ export function useBanners() {
 
 export function usePlaybackSource(episodeId: string, enabled = true) {
   return useQuery({
-    queryKey: [...queryKeys.playback(episodeId), 'v2'],
+    queryKey: [...queryKeys.playback(episodeId), 'v3'],
     queryFn: () => apiGet<PlaybackSourceDto>(`/episodes/${episodeId}/playback`),
     enabled: Boolean(episodeId) && enabled,
     staleTime: 45 * 60 * 1000,

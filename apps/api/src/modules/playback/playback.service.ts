@@ -56,10 +56,13 @@ export class PlaybackService {
       return { ...source, delivery: 'direct' as const };
     }
 
-    const expiresAt = source.expiresAt ?? new Date(Date.now() + 3600 * 1000).toISOString();
-    const sig = this.signStream(episodeId, expiresAt);
+    const streamTtlMs = this.config.get<number>('PLAYBACK_STREAM_TTL_MS', 6 * 3600 * 1000);
+    const expUnix = Math.floor((Date.now() + streamTtlMs) / 1000);
+    const exp = String(expUnix);
+    const sig = this.signStream(episodeId, exp);
     const publicBase = this.getPublicApiBase(req);
-    const url = `${publicBase}/episodes/${episodeId}/stream?exp=${encodeURIComponent(expiresAt)}&sig=${encodeURIComponent(sig)}`;
+    const url = `${publicBase}/episodes/${episodeId}/stream?exp=${exp}&sig=${encodeURIComponent(sig)}`;
+    const expiresAt = new Date(expUnix * 1000).toISOString();
 
     return {
       ...source,
@@ -69,15 +72,27 @@ export class PlaybackService {
     };
   }
 
-  assertStreamAccess(episodeId: string, expiresAt: string, signature: string): void {
-    if (isPlaybackStreamExpired(expiresAt)) {
+  assertStreamAccess(episodeId: string, exp: string, signature: string): void {
+    if (!exp?.trim() || !signature?.trim()) {
+      throw new UnauthorizedException({
+        message: 'Missing playback token',
+        code: ErrorCodes.FORBIDDEN,
+      });
+    }
+    if (!Number.isFinite(Number(exp))) {
+      throw new UnauthorizedException({
+        message: 'Invalid playback token',
+        code: ErrorCodes.FORBIDDEN,
+      });
+    }
+    if (isPlaybackStreamExpired(exp)) {
       throw new UnauthorizedException({
         message: 'Playback link expired',
         code: ErrorCodes.FORBIDDEN,
       });
     }
     const secret = this.getStreamSigningSecret();
-    if (!verifyPlaybackStreamSignature(secret, episodeId, expiresAt, signature)) {
+    if (!verifyPlaybackStreamSignature(secret, episodeId, exp, signature)) {
       throw new UnauthorizedException({
         message: 'Invalid playback signature',
         code: ErrorCodes.FORBIDDEN,
@@ -159,8 +174,8 @@ export class PlaybackService {
     return token;
   }
 
-  private signStream(episodeId: string, expiresAtIso: string): string {
-    return signPlaybackStream(this.getStreamSigningSecret(), episodeId, expiresAtIso);
+  private signStream(episodeId: string, expUnix: string): string {
+    return signPlaybackStream(this.getStreamSigningSecret(), episodeId, expUnix);
   }
 
   private getPublicApiBase(req?: Request): string {

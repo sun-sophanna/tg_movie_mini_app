@@ -18,21 +18,24 @@ export function getVideoElementSrc(source: PlaybackSourceDto, episodeId: string)
     return url;
   }
 
-  if (url.includes('/stream')) {
-    try {
-      const parsed = new URL(url);
-      return `${apiV1Base()}${parsed.pathname}${parsed.search}`;
-    } catch {
+  if (!url.includes('/stream')) {
+    if (source.provider === 'telegram') {
+      console.warn(
+        '[playback] Expected /stream URL for Telegram. Restart API or check TELEGRAM_PLAYBACK_PROXY. Got:',
+        url,
+      );
+    }
+    return url;
+  }
+
+  try {
+    const parsed = new URL(url);
+    const apiOrigin = new URL(apiV1Base()).origin;
+    if (parsed.origin === apiOrigin) {
       return url;
     }
+    return `${apiV1Base()}${parsed.pathname}${parsed.search}`;
+  } catch {
+    return url;
   }
-
-  if (source.provider === 'telegram') {
-    console.warn(
-      '[playback] Expected /stream URL for Telegram. Restart API or check TELEGRAM_PLAYBACK_PROXY. Got:',
-      url,
-    );
-  }
-
-  return url;
 }

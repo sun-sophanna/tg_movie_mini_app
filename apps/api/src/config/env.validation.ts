@@ -68,6 +68,11 @@ export class EnvironmentVariables {
   API_PUBLIC_BASE_URL?: string;
 
   @IsInt()
+  @Min(60_000)
+  @IsOptional()
+  PLAYBACK_STREAM_TTL_MS?: number;
+
+  @IsInt()
   @Min(60)
   TELEGRAM_AUTH_MAX_AGE_SECONDS!: number;
 
