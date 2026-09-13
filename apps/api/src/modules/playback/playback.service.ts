@@ -52,7 +52,7 @@ export class PlaybackService {
     const source: PlaybackSource = await this.videoProvider.resolvePlaybackSource(episode);
     this.logger.log('PLAYBACK SOURCE GENERATED');
 
-    if (!this.shouldProxyPlayback()) {
+    if (!this.shouldProxyPlayback(source)) {
       return source;
     }
 
@@ -124,16 +124,23 @@ export class PlaybackService {
       res.setHeader('content-type', source.mimeType);
     }
 
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
     res.status(upstream.status);
     upstream.data.pipe(res);
   }
 
-  private shouldProxyPlayback(): boolean {
+  private shouldProxyPlayback(source: PlaybackSource): boolean {
     const configured = this.config.get<string>('TELEGRAM_PLAYBACK_PROXY');
-    if (configured !== undefined && configured !== '') {
-      return configured === 'true' || configured === '1';
+    if (configured === 'false' || configured === '0') {
+      return false;
     }
-    return this.telegramFiles.usesLocalBotApi();
+    if (configured === 'true' || configured === '1') {
+      return true;
+    }
+    // Default: proxy Telegram /file/bot… URLs (token in path; browsers/Mini App need same-origin stream)
+    return source.url.includes('/file/bot');
   }
 
   private getStreamSigningSecret(): string {

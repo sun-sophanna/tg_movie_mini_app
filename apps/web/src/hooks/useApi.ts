@@ -73,7 +73,9 @@ export function usePlaybackSource(episodeId: string, enabled = true) {
     queryKey: queryKeys.playback(episodeId),
     queryFn: () => apiGet<PlaybackSourceDto>(`/episodes/${episodeId}/play`),
     enabled: Boolean(episodeId) && enabled,
-    staleTime: 0,
+    staleTime: 45 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 }
 

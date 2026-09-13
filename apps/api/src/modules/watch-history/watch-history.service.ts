@@ -69,8 +69,11 @@ export class WatchHistoryService {
       row.lastWatchedAt = now;
     }
     const saved = await this.repo.save(row);
-    saved.episode = episode;
-    return this.toDto(saved);
+    const withRelations = await this.repo.findOne({
+      where: { id: saved.id },
+      relations: ['movie', 'episode'],
+    });
+    return this.toDto(withRelations ?? saved);
   }
 
   async remove(userId: string, episodeId: string): Promise<{ removed: boolean }> {

@@ -28,11 +28,9 @@ export function WatchPage() {
       src={playback.data.url}
       mimeType={playback.data.mimeType}
       initialPosition={initialPosition}
-      onNeedRefresh={() => {
-        if (retry < 1) {
-          setRetry((r) => r + 1);
-          playback.refetch();
-        }
+      onNeedRefresh={async () => {
+        setRetry((r) => r + 1);
+        await playback.refetch();
       }}
     />
   );

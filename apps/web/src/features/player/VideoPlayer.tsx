@@ -46,7 +46,6 @@ export function VideoPlayer({ episodeId, src, mimeType, initialPosition = 0, onN
     const onEnded = () => sendProgress(true);
     const onError = () => {
       setError(true);
-      onNeedRefresh();
     };
     video.addEventListener('timeupdate', onTimeUpdate);
     video.addEventListener('pause', onPause);
