@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { VideoPlayer } from '../features/player/VideoPlayer';
 import { usePlaybackSource, useWatchHistory } from '../hooks/useApi';
+import { getVideoElementSrc } from '../utils/playback';
 
 export function WatchPage() {
   const { episodeId = '' } = useParams();
@@ -17,16 +18,18 @@ export function WatchPage() {
     return <Skeleton active className="m-4" paragraph={{ rows: 4 }} />;
   }
 
-  if (!playback.data?.url) {
+  const videoSrc = playback.data ? getVideoElementSrc(playback.data, episodeId) : '';
+
+  if (!videoSrc) {
     return <p className="p-4 text-zinc-400">Unable to load playback source.</p>;
   }
 
   return (
     <VideoPlayer
-      key={`${playback.data.url}-${retry}`}
+      key={`${videoSrc}-${retry}`}
       episodeId={episodeId}
-      src={playback.data.url}
-      mimeType={playback.data.mimeType}
+      src={videoSrc}
+      mimeType={playback.data?.mimeType}
       initialPosition={initialPosition}
       onNeedRefresh={async () => {
         setRetry((r) => r + 1);

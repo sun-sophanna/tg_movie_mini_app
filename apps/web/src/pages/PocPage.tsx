@@ -2,6 +2,7 @@ import { Alert, Button, Input, Typography } from 'antd';
 import { useState } from 'react';
 import { apiGet } from '../api/client';
 import { PlaybackSourceDto } from '@movie/types';
+import { getVideoElementSrc } from '../utils/playback';
 
 /** Minimal Telegram video POC page (Phase 0). */
 export function PocPage() {
@@ -12,7 +13,7 @@ export function PocPage() {
   async function resolve() {
     setError('');
     try {
-      const data = await apiGet<PlaybackSourceDto>(`/episodes/${episodeId}/play`);
+      const data = await apiGet<PlaybackSourceDto>(`/episodes/${episodeId}/playback`);
       setSource(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed');
@@ -31,14 +32,23 @@ export function PocPage() {
       />
       <Input placeholder="Episode UUID" value={episodeId} onChange={(e) => setEpisodeId(e.target.value)} />
       <Button type="primary" onClick={resolve} disabled={!episodeId}>
-        Resolve /play
+        Resolve playback
       </Button>
       {error && <Alert type="error" message={error} />}
       {source && (
         <>
-          <p className="text-xs text-zinc-400 break-all">Provider: {source.provider}</p>
-          <p className="text-xs text-zinc-500 break-all">{source.url}</p>
-          <video controls className="w-full" src={source.url} playsInline preload="metadata" />
+          <p className="text-xs text-zinc-400 break-all">
+            Provider: {source.provider}
+            {source.delivery ? ` · delivery: ${source.delivery}` : ''}
+          </p>
+          <p className="text-xs text-zinc-500 break-all">{getVideoElementSrc(source, episodeId)}</p>
+          <video
+            controls
+            className="w-full"
+            src={getVideoElementSrc(source, episodeId)}
+            playsInline
+            preload="metadata"
+          />
         </>
       )}
     </div>

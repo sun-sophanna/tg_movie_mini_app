@@ -93,10 +93,13 @@ export interface BannerDto {
 
 export interface PlaybackSourceDto {
   episodeId: string;
+  /** URL for `<video src>` — API stream when provider is telegram (not `/play`). */
   url: string;
   mimeType?: string;
   expiresAt?: string;
   provider: 'telegram' | 's3' | 'r2' | 'bunny';
+  /** `api-stream` = proxied `/episodes/:id/stream`; `direct` = CDN/Telegram file URL. */
+  delivery?: 'api-stream' | 'direct';
 }
 
 export interface WatchHistoryItemDto {

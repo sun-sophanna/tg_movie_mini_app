@@ -24,6 +24,17 @@ export class EpisodesController {
     return this.episodes.findById(id);
   }
 
+  /** Resolves playback metadata; `url` in the response is the video stream URL (not this path). */
+  @Get(':id/playback')
+  resolvePlayback(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentTelegramUser() user: UserEntity,
+    @Req() req: Request,
+  ) {
+    return this.playback.getPlaybackSource(id, user, req);
+  }
+
+  /** @deprecated Prefer GET `:id/playback` */
   @Get(':id/play')
   play(
     @Param('id', ParseUUIDPipe) id: string,

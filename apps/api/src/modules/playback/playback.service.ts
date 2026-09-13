@@ -53,7 +53,7 @@ export class PlaybackService {
     this.logger.log('PLAYBACK SOURCE GENERATED');
 
     if (!this.shouldProxyPlayback(source)) {
-      return source;
+      return { ...source, delivery: 'direct' as const };
     }
 
     const expiresAt = source.expiresAt ?? new Date(Date.now() + 3600 * 1000).toISOString();
@@ -65,6 +65,7 @@ export class PlaybackService {
       ...source,
       url,
       expiresAt,
+      delivery: 'api-stream' as const,
     };
   }
 
@@ -139,7 +140,10 @@ export class PlaybackService {
     if (configured === 'true' || configured === '1') {
       return true;
     }
-    // Default: proxy Telegram /file/bot… URLs (token in path; browsers/Mini App need same-origin stream)
+    // Default: all Telegram playback goes through signed /stream (browser-safe)
+    if (source.provider === 'telegram') {
+      return true;
+    }
     return source.url.includes('/file/bot');
   }
 
