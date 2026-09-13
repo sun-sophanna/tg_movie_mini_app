@@ -1,0 +1,10 @@
+{
+    "success": true,
+    "data": {
+        "episodeId": "ceb0078c-215c-45a5-aa12-e2b3a88b4fe6",
+        "url": "http://localhost:8081/file/bot8642631958:AAHs9RxKTA8GFTVNL-pMBJ0jY2CmbVo374Y//var/lib/telegram-bot-api/8642631958:AAHs9RxKTA8GFTVNL-pMBJ0jY2CmbVo374Y/videos/file_0",
+        "mimeType": "video/mp4",
+        "expiresAt": "2026-09-13T11:09:05.976Z",
+        "provider": "telegram"
+    }
+}

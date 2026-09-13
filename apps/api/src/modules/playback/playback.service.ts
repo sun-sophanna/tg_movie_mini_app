@@ -28,12 +28,12 @@ export class PlaybackService {
   ) {}
 
   async getPlaybackSource(episodeId: string, user: UserEntity): Promise<PlaybackSourceDto> {
-    if (user.status !== UserStatus.ACTIVE) {
-      throw new ForbiddenException({
-        message: 'User is not allowed to watch',
-        code: ErrorCodes.FORBIDDEN,
-      });
-    }
+    // if (user.status !== UserStatus.ACTIVE) {
+    //   throw new ForbiddenException({
+    //     message: 'User is not allowed to watch',
+    //     code: ErrorCodes.FORBIDDEN,
+    //   });
+    // }
 
     const episode = await this.episodes.findOne({ where: { id: episodeId } });
     if (!episode) {
