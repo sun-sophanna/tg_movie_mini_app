@@ -37,6 +37,21 @@ export class EnvironmentVariables {
   @IsOptional()
   TELEGRAM_STORAGE_CHAT_ID?: string;
 
+  /** Bot API origin for getFile. Use Local Bot API URL for files over 20 MB. */
+  @IsString()
+  @IsOptional()
+  TELEGRAM_API_BASE_URL?: string;
+
+  /** Public origin for /file/bot… playback URLs (defaults to TELEGRAM_API_BASE_URL). */
+  @IsString()
+  @IsOptional()
+  TELEGRAM_FILE_BASE_URL?: string;
+
+  @IsInt()
+  @Min(1000)
+  @IsOptional()
+  TELEGRAM_FILE_REQUEST_TIMEOUT_MS?: number;
+
   @IsInt()
   @Min(60)
   TELEGRAM_AUTH_MAX_AGE_SECONDS!: number;

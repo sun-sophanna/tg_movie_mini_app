@@ -18,7 +18,9 @@
     "migration:run": "ts-node --project tsconfig.json apps/api/src/database/run-migrations.ts",
     "seed:dev": "ts-node --project tsconfig.json apps/api/src/database/seeds/seed-dev.ts",
     "docker:db:up": "docker compose -f docker-compose.dev.yml up -d",
-    "docker:db:down": "docker compose -f docker-compose.dev.yml down"
+    "docker:db:down": "docker compose -f docker-compose.dev.yml down",
+    "docker:telegram-api:up": "docker compose -f docker-compose.dev.yml --profile telegram-api up -d",
+    "docker:telegram-api:down": "docker compose -f docker-compose.dev.yml --profile telegram-api down"
   },
   "dependencies": {
     "@movie/shared": "workspace:*",

@@ -4,7 +4,39 @@ This app stores videos as Telegram files, not on your API server. Each playable 
 
 There is **no bot webhook or admin UI** in this repo yet—you capture the `file_id` once (manually or via `getUpdates`), then save it in PostgreSQL.
 
-Related: [telegram-video-poc.md](./telegram-video-poc.md) (playback testing), [architecture.md](./architecture.md) (video provider boundary).
+Related: [telegram-video-poc.md](./telegram-video-poc.md) (playback testing), [telegram-local-bot-api.md](./telegram-local-bot-api.md) (files over 20 MB), [architecture.md](./architecture.md) (video provider boundary).
+
+---
+
+## What you need to do
+
+Pick **one path** based on file size.
+
+### Path A — Test clip (20 MB or less, cloud Bot API)
+
+1. Copy `apps/api/.env.example` → `apps/api/.env`; set **`TELEGRAM_BOT_TOKEN`** (and optionally `TELEGRAM_BOT_USERNAME`).
+2. Run **`pnpm run migration:run`** and **`pnpm run seed:dev`** if you have no catalog yet.
+3. Create a **private channel**, add the bot as **administrator** (sections A.2–A.3 below).
+4. Upload a small **MP4** to the channel.
+5. Forward the video to your bot → call **`https://api.telegram.org/bot<TOKEN>/getUpdates`** → copy **`video.file_id`**.
+6. Verify: **`getFile?file_id=...`** on `api.telegram.org` returns `file_path`.
+7. **`UPDATE episodes`** (or `INSERT`) with that `telegram_file_id` and `status = 'ACTIVE'`.
+8. Start API + web; test **`/poc`** or **`GET /api/v1/episodes/:id/play`**.
+
+Do **not** set `TELEGRAM_API_BASE_URL` unless you use Local Bot API.
+
+### Path B — Full movie (over 20 MB)
+
+Cloud `getFile` will fail. Do **Path A steps 1–4**, then:
+
+1. Follow **[telegram-local-bot-api.md](./telegram-local-bot-api.md) — “What you need to do”** (Docker Local Bot API + `TELEGRAM_API_BASE_URL`).
+2. Use **`http://localhost:8081`** (or your production Bot API URL) for **`getUpdates`** and **`getFile`**, not `api.telegram.org`.
+3. Store the `file_id` from that instance on **`episodes.telegram_file_id`**.
+4. In production, set public **`TELEGRAM_FILE_BASE_URL`** so Telegram Mini App users can stream (not `localhost`).
+
+### Add or change movie metadata (any path)
+
+There is no admin UI yet. Insert/update **`movies`**, then **`episodes`** (see [Adding catalog metadata](#adding-catalog-metadata-movies) at the bottom).
 
 ---
 
@@ -17,7 +49,7 @@ Related: [telegram-video-poc.md](./telegram-video-poc.md) (playback testing), [a
 | **`TELEGRAM_STORAGE_CHAT_ID`** | Optional in `apps/api/.env`. Channel id (often `-100…`) for documentation; not used by upload automation in MVP. |
 | **`telegram_chat_id` / `telegram_message_id`** | Optional columns on `episodes` for your own traceability. |
 
-Playback path: `episodes.telegram_file_id` → `getFile` → short-lived `https://api.telegram.org/file/bot<token>/…` URL → client refreshes via `GET /api/v1/episodes/:id/play`.
+Playback path: `episodes.telegram_file_id` → `getFile` on `TELEGRAM_API_BASE_URL` (cloud or local) → short-lived `/file/bot<token>/…` URL → client refreshes via `GET /api/v1/episodes/:id/play`.
 
 ---
 
@@ -68,9 +100,12 @@ The bot must be able to resolve the file with **the same token** you put in `TEL
 2. Send the file as **video** when possible (prefer **MP4** for HTML5 players). The API defaults missing mime to `video/mp4`.
 3. Wait for Telegram to finish processing (large uploads take time).
 
-### 20 MB limit
+### File size limits
 
-Standard Bot API **`getFile` supports files up to 20 MB**. Larger assets require a [Local Bot API Server](https://core.telegram.org/bots/api#using-a-local-bot-api-server) or a non-Telegram `VideoProvider` later. For first tests, use a **small MP4 under 20 MB**.
+- **Cloud** Bot API (`https://api.telegram.org`): **`getFile` up to 20 MB** only.
+- **Full movies:** run [Local Bot API](./telegram-local-bot-api.md), set `TELEGRAM_API_BASE_URL` (and usually public `TELEGRAM_FILE_BASE_URL`) in `apps/api/.env`, then use the same base URL in `getUpdates` / `getFile` curls below.
+
+For a quick smoke test without Local Bot API, use a **small MP4 under 20 MB**.
 
 ---
 
@@ -85,7 +120,10 @@ Standard Bot API **`getFile` supports files up to 20 MB**. Larger assets require
    **PowerShell / curl:**
 
    ```bash
+   # Cloud (≤20 MB files):
    curl "https://api.telegram.org/botYOUR_TOKEN/getUpdates"
+   # Local Bot API (large files) — see telegram-local-bot-api.md:
+   # curl "http://localhost:8081/botYOUR_TOKEN/getUpdates"
    ```
 
 4. In the JSON, find the latest `message` with a `video` object:
@@ -131,7 +169,9 @@ Use only for **non-sensitive test clips**; third-party bots receive message meta
 ## D. Verify before updating the database
 
 ```bash
+# Use the same Bot API base as TELEGRAM_API_BASE_URL in apps/api/.env
 curl "https://api.telegram.org/botYOUR_TOKEN/getFile?file_id=YOUR_FILE_ID"
+# Local: curl "http://localhost:8081/botYOUR_TOKEN/getFile?file_id=YOUR_FILE_ID"
 ```
 
 Expect:
@@ -195,7 +235,7 @@ Use the **same bot** as `TELEGRAM_BOT_TOKEN` when obtaining the `file_id`.
 |--------|----------------|
 | `getFile` fails | Wrong token, wrong `file_id`, or id from a different bot |
 | Works in curl, fails in app | API not restarted after `.env` change; different `DATABASE_URL` |
-| File &gt; 20 MB | Standard Bot API limit; shrink test file or use Local Bot API |
+| File over 20 MB on cloud API | Configure [Local Bot API](./telegram-local-bot-api.md) and `TELEGRAM_API_BASE_URL` |
 | Empty `getUpdates` | No forward to bot yet; `/start` then forward again |
 | Play URL stops after ~1 hour | Expected; client must call `/play` again (`expiresAt` ~ 1h) |
 
@@ -203,13 +243,26 @@ Use the **same bot** as `TELEGRAM_BOT_TOKEN` when obtaining the `file_id`.
 
 ## Checklist
 
+**Everyone**
+
 - [ ] `TELEGRAM_BOT_TOKEN` (and optionally `TELEGRAM_BOT_USERNAME`, `TELEGRAM_STORAGE_CHAT_ID`) in `apps/api/.env`
 - [ ] Private channel created; bot is administrator
-- [ ] Test MP4 uploaded (≤ 20 MB for standard Bot API)
-- [ ] Video forwarded to bot; `file_id` copied from `getUpdates`
-- [ ] `getFile` returns `file_path`
+- [ ] Video uploaded to channel; forwarded to bot; `file_id` from `getUpdates`
+- [ ] `getFile` returns `file_path` (same Bot API base you configured)
 - [ ] `episodes.telegram_file_id` updated; `status = 'ACTIVE'`
 - [ ] `/poc` or `/episodes/:id/play` succeeds
+
+**Path A only (≤ 20 MB)**
+
+- [ ] No `TELEGRAM_API_BASE_URL` (defaults to cloud)
+- [ ] `getUpdates` / `getFile` use `https://api.telegram.org`
+
+**Path B only (over 20 MB)**
+
+- [ ] [Local Bot API setup](./telegram-local-bot-api.md#what-you-need-to-do) completed
+- [ ] `TELEGRAM_API_BASE_URL=http://localhost:8081` (dev) or your server URL
+- [ ] `/api/v1/health` → `telegramFileDelivery: local_bot_api`
+- [ ] Production: `TELEGRAM_FILE_BASE_URL` is public HTTPS
 
 ---
 

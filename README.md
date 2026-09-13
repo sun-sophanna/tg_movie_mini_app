@@ -56,13 +56,17 @@ pnpm run start:web
 | `pnpm test` | Jest (Telegram auth, cache) |
 | `pnpm run migration:run` | Apply SQL migrations |
 | `pnpm run seed:dev` | Sample catalog (after migration) |
+| `pnpm run docker:telegram-api:up` | Local Bot API on `:8081` (large files; needs `TELEGRAM_API_ID` / `TELEGRAM_API_HASH` in root `.env`) |
 
 ## Telegram setup (summary)
 
+Step-by-step checklists: **`docs/telegram-file-id.md`** (what you need to do) · **`docs/telegram-local-bot-api.md`** (files over 20 MB).
+
 1. Create bot via [@BotFather](https://t.me/BotFather), set `TELEGRAM_BOT_TOKEN`.
-2. Create private channel, add bot as admin, upload test videos, store `file_id` on episodes — see `docs/telegram-file-id.md`.
+2. Create private channel, add bot as admin, upload videos, store `file_id` on episodes — follow **Path A or B** in `docs/telegram-file-id.md`.
 3. Configure Mini App URL in BotFather → your Vercel/web URL.
-4. Run video POC (`/poc`, `docs/telegram-video-poc.md`) before production go-live.
+4. For videos over 20 MB: **`docs/telegram-local-bot-api.md`** → Docker + `TELEGRAM_API_BASE_URL`.
+5. Run video POC (`/poc`, `docs/telegram-video-poc.md`) before production go-live.
 
 ## Deployment
 
@@ -70,4 +74,4 @@ pnpm run start:web
 - **Backend:** Railway / Render / Fly.io / VPS recommended for Nest + Neon pooling.
 - **Database:** Neon with SSL and migration on deploy.
 
-See `docs/deployment.md`, `docs/telegram-file-id.md`, and `docs/telegram-video-poc.md`.
+See `docs/deployment.md`, `docs/telegram-file-id.md`, `docs/telegram-local-bot-api.md`, and `docs/telegram-video-poc.md`.

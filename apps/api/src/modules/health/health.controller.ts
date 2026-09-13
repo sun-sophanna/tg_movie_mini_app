@@ -28,12 +28,16 @@ export class HealthController {
     }
 
     const telegramConfigured = Boolean(this.config.get('TELEGRAM_BOT_TOKEN'));
+    const apiBase =
+      this.config.get<string>('TELEGRAM_API_BASE_URL')?.trim() || 'https://api.telegram.org';
+    const usesLocalBotApi = apiBase.replace(/\/+$/, '') !== 'https://api.telegram.org';
     return {
       status: database === 'up' ? 'ok' : 'degraded',
       checks: {
         api: 'up',
         database,
         telegram: telegramConfigured ? 'configured' : 'not_configured',
+        telegramFileDelivery: usesLocalBotApi ? 'local_bot_api' : 'cloud_bot_api_20mb_max',
         cache: this.config.get('CACHE_ENABLED') ? 'enabled' : 'disabled',
       },
     };
