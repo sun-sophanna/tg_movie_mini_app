@@ -60,7 +60,7 @@ pnpm run start:web
 ## Telegram setup (summary)
 
 1. Create bot via [@BotFather](https://t.me/BotFather), set `TELEGRAM_BOT_TOKEN`.
-2. Create private channel, add bot as admin, upload test videos, store `file_id` on episodes.
+2. Create private channel, add bot as admin, upload test videos, store `file_id` on episodes — see `docs/telegram-file-id.md`.
 3. Configure Mini App URL in BotFather → your Vercel/web URL.
 4. Run video POC (`/poc`, `docs/telegram-video-poc.md`) before production go-live.
 
@@ -70,4 +70,4 @@ pnpm run start:web
 - **Backend:** Railway / Render / Fly.io / VPS recommended for Nest + Neon pooling.
 - **Database:** Neon with SSL and migration on deploy.
 
-See `docs/deployment.md` and `docs/telegram-video-poc.md`.
+See `docs/deployment.md`, `docs/telegram-file-id.md`, and `docs/telegram-video-poc.md`.
