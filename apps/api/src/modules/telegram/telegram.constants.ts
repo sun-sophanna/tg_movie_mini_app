@@ -13,3 +13,8 @@ export function normalizeTelegramBaseUrl(url: string): string {
 export function isCloudTelegramApiBase(baseUrl: string): boolean {
   return normalizeTelegramBaseUrl(baseUrl) === TELEGRAM_API_BASE_DEFAULT;
 }
+
+/** Path segment for Local Bot API /file/bot<token>/… URLs (avoids double slashes). */
+export function formatTelegramFilePathForUrl(filePath: string): string {
+  return filePath.replace(/^\/+/, '');
+}

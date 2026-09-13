@@ -1,5 +1,8 @@
-import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Query, Req, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
+import { Request, Response } from 'express';
+import { SkipResponseWrap } from '../../common/decorators/skip-response-wrap.decorator';
 import { CurrentTelegramUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../auth/public.decorator';
 import { UserEntity } from '../users/entities/user.entity';
@@ -22,7 +25,26 @@ export class EpisodesController {
   }
 
   @Get(':id/play')
-  play(@Param('id', ParseUUIDPipe) id: string, @CurrentTelegramUser() user: UserEntity) {
-    return this.playback.getPlaybackSource(id, user);
+  play(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentTelegramUser() user: UserEntity,
+    @Req() req: Request,
+  ) {
+    return this.playback.getPlaybackSource(id, user, req);
+  }
+
+  @Public()
+  @SkipThrottle()
+  @SkipResponseWrap()
+  @Get(':id/stream')
+  async stream(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('exp') exp: string,
+    @Query('sig') sig: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    this.playback.assertStreamAccess(id, exp, sig);
+    await this.playback.streamEpisodeToResponse(id, req, res);
   }
 }

@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TelegramModule } from '../telegram/telegram.module';
@@ -8,7 +9,11 @@ import { TelegramVideoProvider } from './telegram-video.provider';
 import { VIDEO_PROVIDER } from './playback.types';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([EpisodeEntity, MovieEntity]), TelegramModule],
+  imports: [
+    HttpModule,
+    TypeOrmModule.forFeature([EpisodeEntity, MovieEntity]),
+    TelegramModule,
+  ],
   providers: [
     PlaybackService,
     TelegramVideoProvider,

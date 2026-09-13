@@ -16,7 +16,7 @@ Use this when videos are **over 20 MB** or you already saw a **“file is too bi
 |------|--------|
 | 1 | Create a bot via [@BotFather](https://t.me/BotFather); put `TELEGRAM_BOT_TOKEN` in `apps/api/.env`. |
 | 2 | Get `api_id` and `api_hash` from [my.telegram.org](https://my.telegram.org) → API development tools. |
-| 3 | Create **`telegram-movie-app/.env`** (repo root) with `TELEGRAM_API_ID` and `TELEGRAM_API_HASH`. |
+| 3 | Copy **`.env.example`** → **`.env`** at repo root; set `TELEGRAM_API_ID` and `TELEGRAM_API_HASH`. |
 | 4 | Run **`pnpm run docker:telegram-api:up`** — Local Bot API on `http://localhost:8081`. |
 | 5 | In **`apps/api/.env`**, add `TELEGRAM_API_BASE_URL=http://localhost:8081` and `TELEGRAM_FILE_REQUEST_TIMEOUT_MS=120000`. |
 | 6 | **Restart** the Nest API (`pnpm run start:api:dev`). |
@@ -73,7 +73,13 @@ These are for the Local Bot API process, not BotFather.
 
 ## 2. Run Local Bot API with Docker (dev)
 
-In the repo root, add to **`.env`** (used by Compose):
+In the repo root:
+
+```bash
+cp .env.example .env
+```
+
+Edit **`.env`** (used by Compose):
 
 ```env
 TELEGRAM_API_ID=12345678
@@ -149,9 +155,13 @@ Use `/poc` or `GET /api/v1/episodes/:id/play` as in [telegram-video-poc.md](./te
 | Issue | What to check |
 |--------|----------------|
 | Still “file is too big” | `TELEGRAM_API_BASE_URL` still points to `https://api.telegram.org`; restart API after env change |
-| Play works on desktop, fails on phone | `TELEGRAM_FILE_BASE_URL` must be public HTTPS, not `localhost` |
+| `/play` returns `localhost:8081/file/bot…` but video does not play | With Local Bot API, `/play` should return an **`/api/v1/episodes/…/stream?sig=…`** URL (API proxy). Restart API after setting `TELEGRAM_API_BASE_URL`. Set `TELEGRAM_PLAYBACK_PROXY=true` if needed. |
+| Play works on desktop, fails on phone | `API_PUBLIC_BASE_URL` / `TELEGRAM_FILE_BASE_URL` must be a host the phone can reach (not your PC’s `localhost` unless testing on the same machine). |
+| Stream 401 | `exp`/`sig` expired or wrong — call `/play` again for a fresh URL. |
 | getFile OK, play 403/404 | Token mismatch, expired path, or proxy blocking `/file/bot…` |
 | Slow first play | Local server may fetch from Telegram on first request; cache volume helps |
+
+**Security:** Do not commit bot tokens (e.g. in debug JSON files). Revoke in [@BotFather](https://t.me/BotFather) if leaked.
 
 ---
 

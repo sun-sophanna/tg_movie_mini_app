@@ -52,6 +52,21 @@ export class EnvironmentVariables {
   @IsOptional()
   TELEGRAM_FILE_REQUEST_TIMEOUT_MS?: number;
 
+  /** true/1 = proxy video through API; unset = auto (on when Local Bot API is used). */
+  @IsString()
+  @IsOptional()
+  TELEGRAM_PLAYBACK_PROXY?: string;
+
+  /** HMAC secret for /episodes/:id/stream (defaults to TELEGRAM_BOT_TOKEN). */
+  @IsString()
+  @IsOptional()
+  PLAYBACK_STREAM_SECRET?: string;
+
+  /** Public API base for playback URLs, e.g. http://localhost:3000/api/v1 */
+  @IsString()
+  @IsOptional()
+  API_PUBLIC_BASE_URL?: string;
+
   @IsInt()
   @Min(60)
   TELEGRAM_AUTH_MAX_AGE_SECONDS!: number;

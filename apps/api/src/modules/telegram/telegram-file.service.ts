@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import {
+  formatTelegramFilePathForUrl,
   isCloudTelegramApiBase,
   normalizeTelegramBaseUrl,
   TELEGRAM_API_BASE_DEFAULT,
@@ -97,7 +98,8 @@ export class TelegramFileService {
     }
     const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
     const fileBase = this.getFileDownloadBaseUrl();
-    const url = `${fileBase}/file/bot${token}/${filePath}`;
+    const pathForUrl = formatTelegramFilePathForUrl(filePath);
+    const url = `${fileBase}/file/bot${token}/${pathForUrl}`;
     return { url, expiresAt };
   }
 }

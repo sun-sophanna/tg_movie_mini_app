@@ -56,7 +56,7 @@ pnpm run start:web
 | `pnpm test` | Jest (Telegram auth, cache) |
 | `pnpm run migration:run` | Apply SQL migrations |
 | `pnpm run seed:dev` | Sample catalog (after migration) |
-| `pnpm run docker:telegram-api:up` | Local Bot API on `:8081` (large files; needs `TELEGRAM_API_ID` / `TELEGRAM_API_HASH` in root `.env`) |
+| `pnpm run docker:telegram-api:up` | Local Bot API on `:8081` (copy root `.env.example` → `.env`, set `TELEGRAM_API_ID` / `TELEGRAM_API_HASH`) |
 
 ## Telegram setup (summary)
 

@@ -37,7 +37,8 @@ export function PocPage() {
       {source && (
         <>
           <p className="text-xs text-zinc-400 break-all">Provider: {source.provider}</p>
-          <video controls className="w-full" src={source.url} playsInline />
+          <p className="text-xs text-zinc-500 break-all">{source.url}</p>
+          <video controls className="w-full" src={source.url} playsInline preload="metadata" />
         </>
       )}
     </div>
