@@ -43,7 +43,7 @@ pnpm run start:web
 ```
 
 - API: `http://localhost:3000/api/v1` · Swagger: `http://localhost:3000/docs`
-- Web: `http://localhost:5173` · POC player: `/poc`
+- Web: `http://localhost:5173` · POC player: `/poc` · **Admin:** `/admin` (see `docs/admin.md`)
 - Local auth mock: `VITE_ENABLE_TELEGRAM_MOCK=true` + `TELEGRAM_MOCK_AUTH_ENABLED=true` (non-production only)
 
 ## Commands

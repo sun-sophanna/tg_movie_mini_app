@@ -3,13 +3,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import {
-  formatTelegramFilePathForUrl,
   isCloudTelegramApiBase,
   normalizeTelegramBaseUrl,
   TELEGRAM_API_BASE_DEFAULT,
   TELEGRAM_CLOUD_MAX_FILE_BYTES,
   TELEGRAM_REQUEST_TIMEOUT_MS_DEFAULT,
 } from './telegram.constants';
+import {
+  defaultLocalBotApiHostRoot,
+  mapTelegramLocalPathToHost,
+} from './telegram-local-files.util';
 import { TelegramFileResponse } from './telegram.types';
 
 @Injectable()
@@ -27,11 +30,16 @@ export class TelegramFileService {
     return normalizeTelegramBaseUrl(configured?.trim() || TELEGRAM_API_BASE_DEFAULT);
   }
 
-  /** Base URL embedded in playback links returned to clients (must be reachable by browsers). */
+  /** Base URL for upstream video fetch (/file/bot…). Local --local mode needs the nginx sidecar on :8082. */
   getFileDownloadBaseUrl(): string {
     const configured = this.config.get<string>('TELEGRAM_FILE_BASE_URL');
-    const base = configured?.trim() || this.getApiBaseUrl();
-    return normalizeTelegramBaseUrl(base);
+    if (configured?.trim()) {
+      return normalizeTelegramBaseUrl(configured);
+    }
+    if (this.usesLocalBotApi()) {
+      return normalizeTelegramBaseUrl('http://localhost:8082');
+    }
+    return this.getApiBaseUrl();
   }
 
   usesLocalBotApi(): boolean {
@@ -91,6 +99,22 @@ export class TelegramFileService {
     return response.data.result;
   }
 
+  /**
+   * Local Bot API (--local) returns absolute paths; files are on disk, not at HTTP /file/bot….
+   * Map container path to host path when using the dev bind mount or TELEGRAM_LOCAL_FILES_HOST_ROOT.
+   */
+  resolveHostLocalPath(filePath: string | undefined): string | null {
+    if (!filePath?.startsWith('/') || !this.usesLocalBotApi()) {
+      return null;
+    }
+    const containerRoot =
+      this.config.get<string>('TELEGRAM_LOCAL_FILES_CONTAINER_ROOT')?.trim() ||
+      '/var/lib/telegram-bot-api';
+    const configuredHost = this.config.get<string>('TELEGRAM_LOCAL_FILES_HOST_ROOT')?.trim();
+    const hostRoot = configuredHost || defaultLocalBotApiHostRoot();
+    return mapTelegramLocalPathToHost(filePath, containerRoot, hostRoot);
+  }
+
   buildFileDownloadUrl(filePath: string): { url: string; expiresAt: string } {
     const token = this.config.get<string>('TELEGRAM_BOT_TOKEN');
     if (!token) {
@@ -98,8 +122,30 @@ export class TelegramFileService {
     }
     const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
     const fileBase = this.getFileDownloadBaseUrl();
-    const pathForUrl = formatTelegramFilePathForUrl(filePath);
-    const url = `${fileBase}/file/bot${token}/${pathForUrl}`;
+    const relativePath = this.toHttpFilePath(filePath);
+    const url = `${fileBase}/file/bot${token}/${relativePath}`;
     return { url, expiresAt };
+  }
+
+  /** Cloud getFile returns `videos/…`; --local returns `/var/lib/telegram-bot-api/<token>/videos/…`. */
+  private toHttpFilePath(filePath: string): string {
+    if (!filePath.startsWith('/')) {
+      return filePath;
+    }
+    const containerRoot =
+      this.config.get<string>('TELEGRAM_LOCAL_FILES_CONTAINER_ROOT')?.trim() ||
+      '/var/lib/telegram-bot-api';
+    const normalizedRoot = containerRoot.replace(/\\/g, '/').replace(/\/$/, '');
+    const prefix = `${normalizedRoot}/`;
+    const normalized = filePath.replace(/\\/g, '/');
+    if (!normalized.startsWith(prefix)) {
+      return filePath.replace(/^\//, '');
+    }
+    const afterRoot = normalized.slice(prefix.length);
+    const slash = afterRoot.indexOf('/');
+    if (slash <= 0) {
+      return filePath.replace(/^\//, '');
+    }
+    return afterRoot.slice(slash + 1);
   }
 }

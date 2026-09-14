@@ -61,9 +61,15 @@ export function VideoPlayer({ episodeId, src, mimeType, initialPosition = 0, onN
 
   useEffect(() => {
     const video = videoRef.current;
-    if (video && initialPosition > 0) {
-      video.currentTime = initialPosition;
-    }
+    if (!video || initialPosition <= 0) return;
+    const apply = () => {
+      if (Number.isFinite(video.duration) && initialPosition < video.duration) {
+        video.currentTime = initialPosition;
+      }
+    };
+    video.addEventListener('loadedmetadata', apply);
+    if (video.readyState >= 1) apply();
+    return () => video.removeEventListener('loadedmetadata', apply);
   }, [src, initialPosition]);
 
   if (error) {

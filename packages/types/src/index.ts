@@ -120,3 +120,54 @@ export interface ApiErrorBody {
   message: string;
   code: string;
 }
+
+export interface AdminDashboardStatsDto {
+  moviesTotal: number;
+  moviesActive: number;
+  episodesTotal: number;
+  episodesActive: number;
+  categoriesTotal: number;
+}
+
+export interface AdminMovieDto {
+  id: string;
+  title: string;
+  titleKh?: string | null;
+  slug: string;
+  description?: string | null;
+  descriptionKh?: string | null;
+  posterUrl?: string | null;
+  backdropUrl?: string | null;
+  releaseYear?: number | null;
+  durationMinutes?: number | null;
+  rating?: string | null;
+  country?: string | null;
+  originalLanguage?: string | null;
+  type: MovieType;
+  status: MovieStatus;
+  isFeatured: boolean;
+  isTrending: boolean;
+  publishedAt?: string | null;
+  categoryIds: string[];
+  episodeCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminEpisodeDto {
+  id: string;
+  movieId: string;
+  movieTitle?: string;
+  seasonId?: string | null;
+  episodeNumber: number;
+  title?: string | null;
+  titleKh?: string | null;
+  thumbnailUrl?: string | null;
+  durationSeconds?: number | null;
+  telegramFileId: string;
+  telegramFileUniqueId?: string | null;
+  mimeType?: string | null;
+  status: EpisodeStatus;
+  createdAt: string;
+  updatedAt: string;
+}

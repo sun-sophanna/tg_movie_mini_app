@@ -97,6 +97,11 @@ export class EnvironmentVariables {
   @IsBoolean()
   @IsOptional()
   TELEGRAM_MOCK_AUTH_ENABLED?: boolean;
+
+  /** Required for /api/v1/admin/* (send header X-Admin-Key). */
+  @IsString()
+  @IsOptional()
+  ADMIN_API_KEY?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>): EnvironmentVariables {

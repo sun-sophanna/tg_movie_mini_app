@@ -22,6 +22,24 @@ const CategoriesPage = lazy(() =>
 const CategoryMoviesPage = lazy(() =>
   import('../pages/CategoryMoviesPage').then((m) => ({ default: m.CategoryMoviesPage })),
 );
+const AdminLoginPage = lazy(() =>
+  import('../pages/admin/AdminLoginPage').then((m) => ({ default: m.AdminLoginPage })),
+);
+const AdminDashboardPage = lazy(() =>
+  import('../pages/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })),
+);
+const AdminMoviesPage = lazy(() =>
+  import('../pages/admin/AdminMoviesPage').then((m) => ({ default: m.AdminMoviesPage })),
+);
+const AdminMovieFormPage = lazy(() =>
+  import('../pages/admin/AdminMovieFormPage').then((m) => ({ default: m.AdminMovieFormPage })),
+);
+const AdminLayout = lazy(() =>
+  import('../layouts/AdminLayout').then((m) => ({ default: m.AdminLayout })),
+);
+const AdminRoute = lazy(() =>
+  import('../components/admin/AdminRoute').then((m) => ({ default: m.AdminRoute })),
+);
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<Spin className="m-8 block" />}>{children}</Suspense>;
@@ -30,6 +48,15 @@ function Lazy({ children }: { children: React.ReactNode }) {
 export function AppRoutes() {
   return (
     <Routes>
+      <Route path="admin/login" element={<Lazy><AdminLoginPage /></Lazy>} />
+      <Route path="admin" element={<Lazy><AdminRoute /></Lazy>}>
+        <Route element={<Lazy><AdminLayout /></Lazy>}>
+          <Route index element={<Lazy><AdminDashboardPage /></Lazy>} />
+          <Route path="movies" element={<Lazy><AdminMoviesPage /></Lazy>} />
+          <Route path="movies/new" element={<Lazy><AdminMovieFormPage /></Lazy>} />
+          <Route path="movies/:id" element={<Lazy><AdminMovieFormPage /></Lazy>} />
+        </Route>
+      </Route>
       <Route element={<AppLayout />}>
         <Route index element={<Lazy><HomePage /></Lazy>} />
         <Route path="search" element={<Lazy><SearchPage /></Lazy>} />

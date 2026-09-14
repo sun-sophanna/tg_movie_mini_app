@@ -21,6 +21,7 @@ import { PlaybackModule } from './modules/playback/playback.module';
 import { TelegramModule } from './modules/telegram/telegram.module';
 import { CacheModule } from './modules/cache/cache.module';
 import { HealthModule } from './modules/health/health.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { UserEntity } from './modules/users/entities/user.entity';
 import { MovieEntity } from './modules/movies/entities/movie.entity';
 import { SeasonEntity } from './modules/seasons/entities/season.entity';
@@ -82,6 +83,7 @@ import { WatchHistoryEntity } from './modules/watch-history/entities/watch-histo
     FavoritesModule,
     WatchHistoryModule,
     HealthModule,
+    AdminModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },

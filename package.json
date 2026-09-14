@@ -8,6 +8,7 @@
     "build:packages": "pnpm --filter @movie/shared build",
     "build:api": "pnpm run build:packages && nest build api",
     "build:web": "pnpm --filter @movie/web build",
+    "start": "node dist/apps/api/main.js",
     "start:api": "nest start api",
     "start:api:dev": "pnpm run build:packages && nest start api --watch",
     "start:web": "pnpm --filter @movie/web dev",

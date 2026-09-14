@@ -120,6 +120,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@ant-design/icons':
+        specifier: ^6.0.0
+        version: 6.3.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@movie/shared':
         specifier: workspace:*
         version: link:../../packages/shared

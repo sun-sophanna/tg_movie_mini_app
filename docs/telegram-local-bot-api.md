@@ -17,7 +17,7 @@ Use this when videos are **over 20 MB** or you already saw a **“file is too bi
 | 1 | Create a bot via [@BotFather](https://t.me/BotFather); put `TELEGRAM_BOT_TOKEN` in `apps/api/.env`. |
 | 2 | Get `api_id` and `api_hash` from [my.telegram.org](https://my.telegram.org) → API development tools. |
 | 3 | Copy **`.env.example`** → **`.env`** at repo root; set `TELEGRAM_API_ID` and `TELEGRAM_API_HASH`. |
-| 4 | Run **`pnpm run docker:telegram-api:up`** — Local Bot API on `http://localhost:8081`. |
+| 4 | Run **`pnpm run docker:telegram-api:up`** — Bot API on **`http://localhost:8081`** and file nginx on **`http://localhost:8082`** (`--local` mode does not serve bytes on 8081). |
 | 5 | In **`apps/api/.env`**, add `TELEGRAM_API_BASE_URL=http://localhost:8081` and `TELEGRAM_FILE_REQUEST_TIMEOUT_MS=120000`. |
 | 6 | **Restart** the Nest API (`pnpm run start:api:dev`). |
 | 7 | Finish channel + upload steps in [telegram-file-id.md](./telegram-file-id.md), but use **`http://localhost:8081`** for all `getUpdates` / `getFile` calls (not `api.telegram.org`). |
@@ -49,13 +49,13 @@ Mini App / browser
     ▼
 Nest → getFile on TELEGRAM_API_BASE_URL (often internal)
     ▼
-Nest returns url = TELEGRAM_FILE_BASE_URL/file/bot<token>/<path>
+Nest returns signed GET /api/v1/episodes/:id/stream (JSON from /playback)
     ▼
-Player streams from Local Bot API (must be HTTPS + reachable in production)
+Nest proxies bytes from http://localhost:8082/file/bot<token>/videos/… (nginx reads Docker volume)
 ```
 
 - **`TELEGRAM_API_BASE_URL`** — where the **API server** calls Bot API (`getFile`). Example: `http://localhost:8081` or `http://telegram-bot-api:8081` inside Docker.
-- **`TELEGRAM_FILE_BASE_URL`** — origin in **playback URLs** sent to users. Must be reachable from the user’s device (Telegram WebView). Example: `https://bot-api.yourdomain.com`. Defaults to `TELEGRAM_API_BASE_URL` if unset.
+- **`TELEGRAM_FILE_BASE_URL`** — where Nest **fetches** file bytes for `/stream` (`/file/bot…`). Defaults to **`http://localhost:8082`** when using Local Bot API. In production, point at an HTTPS nginx that serves the Bot API cache directory.
 
 Check mode: `GET /api/v1/health` → `checks.telegramFileDelivery` is `local_bot_api` when not using cloud.
 
@@ -99,9 +99,10 @@ Configure the Nest API in `apps/api/.env`:
 ```env
 TELEGRAM_BOT_TOKEN=...your existing bot token...
 TELEGRAM_API_BASE_URL=http://localhost:8081
-# Optional if same as above:
-# TELEGRAM_FILE_BASE_URL=http://localhost:8081
+# Optional; default for local is http://localhost:8082 (nginx sidecar)
+# TELEGRAM_FILE_BASE_URL=http://localhost:8082
 TELEGRAM_FILE_REQUEST_TIMEOUT_MS=120000
+TELEGRAM_PLAYBACK_PROXY=true
 ```
 
 Restart the API. Upload / forward videos to your channel as in [telegram-file-id.md](./telegram-file-id.md). Use `getUpdates` against **`http://localhost:8081`** instead of `api.telegram.org` when capturing `file_id` from a bot connected through the local server.
@@ -157,7 +158,8 @@ Use `/poc` or `GET /api/v1/episodes/:id/play` as in [telegram-video-poc.md](./te
 | Still “file is too big” | `TELEGRAM_API_BASE_URL` still points to `https://api.telegram.org`; restart API after env change |
 | `/play` returns `localhost:8081/file/bot…` but video does not play | With Local Bot API, `/play` should return an **`/api/v1/episodes/…/stream?sig=…`** URL (API proxy). Restart API after setting `TELEGRAM_API_BASE_URL`. Set `TELEGRAM_PLAYBACK_PROXY=true` if needed. |
 | Play works on desktop, fails on phone | `API_PUBLIC_BASE_URL` / `TELEGRAM_FILE_BASE_URL` must be a host the phone can reach (not your PC’s `localhost` unless testing on the same machine). |
-| Stream 401 | `exp`/`sig` expired or wrong — call `/play` again for a fresh URL. |
+| Stream 401 | `exp`/`sig` expired or wrong — call `/playback` again for a fresh URL. |
+| `/playback` OK but video “Playback failed” | In **`--local`** mode, port **8081** does **not** serve file bytes (404). `pnpm run docker:telegram-api:up` also starts **nginx on :8082**; the API proxies `/stream` from `http://localhost:8082/file/bot…`. Ensure both containers are up. Re-capture `file_id` via **`http://localhost:8081`** if `getFile` works but the file is missing on disk. |
 | getFile OK, play 403/404 | Token mismatch, expired path, or proxy blocking `/file/bot…` |
 | Slow first play | Local server may fetch from Telegram on first request; cache volume helps |
 

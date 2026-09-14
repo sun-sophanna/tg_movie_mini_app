@@ -9,6 +9,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { HttpService } from '@nestjs/axios';
+import { isAxiosError } from 'axios';
+import { createReadStream, statSync } from 'fs';
 import { Request, Response } from 'express';
 import { firstValueFrom } from 'rxjs';
 import { Repository } from 'typeorm';
@@ -108,6 +110,13 @@ export class PlaybackService {
     const episode = await this.loadActiveEpisode(episodeId);
     const source = await this.videoProvider.resolvePlaybackSource(episode);
 
+    const localPath = this.telegramFiles.resolveHostLocalPath(source.telegramStoragePath);
+    if (localPath) {
+      this.logger.log(`PLAYBACK STREAM local file ${localPath}`);
+      this.streamLocalFileToResponse(localPath, source.mimeType, req, res);
+      return;
+    }
+
     const headers: Record<string, string> = {};
     const range = req.headers.range;
     if (typeof range === 'string') {
@@ -115,14 +124,29 @@ export class PlaybackService {
     }
 
     this.logger.log('PLAYBACK STREAM PROXY');
-    const upstream = await firstValueFrom(
-      this.http.get(source.url, {
-        headers,
-        responseType: 'stream',
-        timeout: this.telegramFiles.usesLocalBotApi() ? 120_000 : 30_000,
-        validateStatus: (status) => status >= 200 && status < 400,
-      }),
-    );
+    let upstream;
+    try {
+      upstream = await firstValueFrom(
+        this.http.get(source.url, {
+          headers,
+          responseType: 'stream',
+          timeout: this.telegramFiles.usesLocalBotApi() ? 120_000 : 30_000,
+          validateStatus: (status) => status >= 200 && status < 400,
+        }),
+      );
+    } catch (err) {
+      const status = isAxiosError(err) ? err.response?.status : undefined;
+      this.logger.warn(
+        `Upstream video fetch failed (${status ?? 'network'}): ${source.url.slice(0, 80)}…`,
+      );
+      if (status === 404) {
+        throw new NotFoundException({
+          message: 'Telegram video file not found on storage (check file_id and Local Bot API)',
+          code: ErrorCodes.TELEGRAM_FILE_NOT_FOUND,
+        });
+      }
+      throw err;
+    }
 
     const passHeaders = [
       'content-type',
@@ -145,6 +169,43 @@ export class PlaybackService {
 
     res.status(upstream.status);
     upstream.data.pipe(res);
+  }
+
+  private streamLocalFileToResponse(
+    filePath: string,
+    mimeType: string | undefined,
+    req: Request,
+    res: Response,
+  ): void {
+    const fileSize = statSync(filePath).size;
+    const rangeHeader = req.headers.range;
+
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Accept-Ranges', 'bytes');
+    if (mimeType) {
+      res.setHeader('content-type', mimeType);
+    }
+
+    if (typeof rangeHeader === 'string') {
+      const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader.trim());
+      if (match) {
+        const start = match[1] ? parseInt(match[1], 10) : 0;
+        const end = match[2] ? parseInt(match[2], 10) : fileSize - 1;
+        if (start <= end && end < fileSize) {
+          const chunkSize = end - start + 1;
+          res.status(206);
+          res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+          res.setHeader('Content-Length', chunkSize);
+          createReadStream(filePath, { start, end }).pipe(res);
+          return;
+        }
+      }
+    }
+
+    res.status(200);
+    res.setHeader('Content-Length', fileSize);
+    createReadStream(filePath).pipe(res);
   }
 
   private shouldProxyPlayback(source: PlaybackSource): boolean {

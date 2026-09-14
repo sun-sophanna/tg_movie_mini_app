@@ -70,15 +70,17 @@ describe('TelegramFileService', () => {
     expect(url).toBe(`https://bot-api.example.com/file/bot${token}/videos/a.mp4`);
   });
 
-  it('strips leading slash from local absolute file paths in download URL', () => {
+  it('maps --local absolute file_path to nginx /file/bot URL on :8082', () => {
     const { service } = createService({
       TELEGRAM_BOT_TOKEN: token,
       TELEGRAM_API_BASE_URL: 'http://localhost:8081',
     });
 
-    const { url } = service.buildFileDownloadUrl('/var/lib/telegram-bot-api/videos/file_0');
+    const { url } = service.buildFileDownloadUrl(
+      `/var/lib/telegram-bot-api/${token}/videos/file_0`,
+    );
 
-    expect(url).toBe(`http://localhost:8081/file/bot${token}/var/lib/telegram-bot-api/videos/file_0`);
+    expect(url).toBe(`http://localhost:8082/file/bot${token}/videos/file_0`);
   });
 
   it('reports local bot API when base URL is not cloud', () => {

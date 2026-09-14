@@ -10,6 +10,7 @@ export const ErrorCodes = {
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',
   UNAUTHORIZED: 'UNAUTHORIZED',
   FORBIDDEN: 'FORBIDDEN',
+  ADMIN_UNAUTHORIZED: 'ADMIN_UNAUTHORIZED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

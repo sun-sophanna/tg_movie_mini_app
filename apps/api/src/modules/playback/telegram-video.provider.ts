@@ -29,6 +29,7 @@ export class TelegramVideoProvider implements VideoProvider {
         mimeType: episode.mimeType ?? 'video/mp4',
         expiresAt,
         provider: 'telegram',
+        telegramStoragePath: meta.file_path.startsWith('/') ? meta.file_path : undefined,
       };
     } catch {
       throw new InternalServerErrorException({
