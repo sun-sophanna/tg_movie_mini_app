@@ -104,8 +104,23 @@ export class EnvironmentVariables {
   ADMIN_API_KEY?: string;
 }
 
+/** Defaults for hosted deploys (Railway) when `.env` is not present. Explicit env vars win. */
+function withEnvDefaults(config: Record<string, unknown>): Record<string, unknown> {
+  return {
+    API_PREFIX: 'api',
+    NODE_ENV: 'production',
+    TELEGRAM_AUTH_MAX_AGE_SECONDS: 86400,
+    CACHE_ENABLED: true,
+    CACHE_DEFAULT_TTL_SECONDS: 300,
+    RATE_LIMIT_TTL_MS: 60_000,
+    RATE_LIMIT_MAX: 100,
+    CORS_ORIGINS: '',
+    ...config,
+  };
+}
+
 export function validateEnv(config: Record<string, unknown>): EnvironmentVariables {
-  const transformed = plainToInstance(EnvironmentVariables, config, {
+  const transformed = plainToInstance(EnvironmentVariables, withEnvDefaults(config), {
     enableImplicitConversion: true,
   });
   const errors = validateSync(transformed, { skipMissingProperties: false });

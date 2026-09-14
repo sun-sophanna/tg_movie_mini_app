@@ -14,7 +14,7 @@ Railpack needs a **start** command. This repo provides:
 - Root `package.json` → `"start": "node dist/apps/api/main.js"`
 - `railpack.json` → build `pnpm run build:api`, same start command
 
-In Railway **Variables**, set env from `apps/api/.env.example` (`DATABASE_URL`, `CORS_ORIGINS`, `API_PUBLIC_BASE_URL`, etc.). Run migrations once: `pnpm run migration:run` (locally with production `DATABASE_URL` or `railway run`).
+In Railway **Variables**, set at minimum **`DATABASE_URL`**, **`TELEGRAM_BOT_TOKEN`**, **`CORS_ORIGINS`** (your Vercel URL), **`API_PUBLIC_BASE_URL`**. Optional: `API_PREFIX=api` (defaults to `api` if omitted). Copy the rest from `apps/api/.env.example`. Run migrations once: `pnpm run migration:run`.
 
 **Networking:** service **Settings → Public networking → Generate domain** → use `https://<domain>/api/v1` as `VITE_API_URL` on Vercel.
 
