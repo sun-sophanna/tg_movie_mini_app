@@ -14,7 +14,8 @@
     "strict": true,
     "paths": {
       "@web/*": ["./src/*"],
-      "@movie/types": ["../../packages/types/src"]
+      "@movie/types": ["../../packages/types/src"],
+      "@movie/shared": ["../../packages/shared/src/index.ts"]
     }
   },
   "include": ["src"]

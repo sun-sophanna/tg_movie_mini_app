@@ -2,10 +2,17 @@
 
 ## Frontend (Vercel)
 
-- Root: `apps/web`
-- Build: `pnpm run build` (or `pnpm --filter @movie/web build`)
-- Env: `VITE_API_URL=https://your-api.example/api/v1`
-- Do not proxy video through Vercel functions.
+Monorepo: set **Root Directory** to `apps/web` (see `apps/web/vercel.json` for install/build from repo root).
+
+| Setting | Value |
+|---------|--------|
+| Install | `cd ../.. && pnpm install` |
+| Build | `cd ../.. && pnpm run build:web` |
+| Output | `dist` |
+
+Or deploy from repo root: Install `pnpm install`, Build `pnpm run build:web`, Output `apps/web/dist`.
+
+Env: `VITE_API_URL=https://your-api.example/api/v1` — do not proxy video through Vercel functions.
 
 ## Backend (Railway + Railpack)
 
